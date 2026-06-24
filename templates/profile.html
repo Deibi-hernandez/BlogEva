@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user.username }} — InkBlog{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Tarjeta de perfil -->
+  <div class="col-12 col-lg-4">
+    <div class="form-card text-center">
+      {% if profile_user.profile.avatar %}
+        <img src="{{ profile_user.profile.avatar.url }}" class="rounded-circle mb-3" style="width:100px;height:100px;object-fit:cover;" alt="Avatar">
+      {% else %}
+        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width:100px;height:100px;font-size:2.5rem;font-weight:700;">
+          {{ profile_user.username|first|upper }}
+        </div>
+      {% endif %}
+      <h2 class="h4 mb-1">{{ profile_user.get_full_name|default:profile_user.username }}</h2>
+      <p class="text-muted small mb-2">@{{ profile_user.username }}</p>
+      {% if profile_user.profile.bio %}
+        <p class="text-muted small mb-2">{{ profile_user.profile.bio }}</p>
+      {% endif %}
+      {% if profile_user.profile.website %}
+        <a href="{{ profile_user.profile.website }}" target="_blank" rel="noopener noreferrer" class="small text-decoration-none">
+          <i class="bi bi-link-45deg me-1"></i>{{ profile_user.profile.website|truncatechars:30 }}
+        </a>
+      {% endif %}
+      <hr class="my-3">
+      <div class="d-flex justify-content-center gap-4">
+        <div><strong>{{ posts.count }}</strong><br><span class="text-muted small">Posts</span></div>
+        <div><strong>{{ profile_user.date_joined|date:"Y" }}</strong><br><span class="text-muted small">Desde</span></div>
+      </div>
+    </div>
+
+    {% if is_own and profile_form %}
+    <div class="form-card mt-3">
+      <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square me-1"></i>Editar perfil</h6>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in profile_form %}
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors.0 }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-accent btn-sm w-100 mt-2">Guardar cambios</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Posts del usuario -->
+  <div class="col-12 col-lg-8">
+    <h2 class="section-heading mb-4">Posts de {{ profile_user.username }}</h2>
+    {% if posts %}
+      <div class="row g-3">
+        {% for post in posts %}
+        <div class="col-12 col-md-6">
+          <article class="post-card h-100 d-flex flex-column">
+            {% if post.imagen %}<img src="{{ post.imagen.url }}" class="post-img" alt="{{ post.titulo|escape }}">{% endif %}
+            <div class="card-body d-flex flex-column p-3">
+              <h3 class="post-title mb-1"><a href="{{ post.get_absolute_url }}">{{ post.titulo }}</a></h3>
+              <p class="text-muted small flex-grow-1 mb-2">{{ post.get_resumen|truncatewords:15 }}</p>
+              <div class="d-flex align-items-center justify-content-between mt-auto">
+                <span class="meta-text">{{ post.fecha_creacion|date:"d M, Y" }}</span>
+                {% if is_own %}
+                <div class="d-flex gap-1">
+                  <a href="{% url 'blog:post_update' post.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                  <a href="{% url 'blog:post_delete' post.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </article>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <i class="bi bi-journal-x d-block mb-2"></i>
+        <p>No hay posts publicados todavía.</p>
+        {% if is_own %}<a href="{% url 'blog:post_create' %}" class="btn btn-accent mt-2"><i class="bi bi-plus-lg me-1"></i>Crear primer post</a>{% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

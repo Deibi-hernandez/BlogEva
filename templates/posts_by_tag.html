@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}#{{ tag.nombre }} — InkBlog{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{% url 'blog:post_list' %}" class="btn btn-outline-ink btn-sm"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+  <h1 class="section-heading mb-0"># {{ tag.nombre }}</h1>
+</div>
+
+{% if page_obj %}
+<div class="row g-4">
+  {% for post in page_obj %}
+  <div class="col-12 col-md-6 col-lg-4">
+    <article class="post-card h-100 d-flex flex-column">
+      {% if post.imagen %}<img src="{{ post.imagen.url }}" class="post-img" alt="{{ post.titulo|escape }}">{% endif %}
+      <div class="card-body d-flex flex-column p-3">
+        <a href="{% url 'blog:user_profile' post.autor.username %}" class="badge-autor mb-2 text-decoration-none d-inline-block" style="width:fit-content">
+          <i class="bi bi-person-fill me-1"></i>{{ post.autor.username }}
+        </a>
+        <h2 class="post-title mb-2"><a href="{{ post.get_absolute_url }}">{{ post.titulo }}</a></h2>
+        <p class="text-muted small flex-grow-1">{{ post.get_resumen|truncatewords:18 }}</p>
+        <div class="mt-auto pt-2 border-top border-light">
+          <a href="{{ post.get_absolute_url }}" class="btn btn-sm btn-outline-ink">Leer <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+      </div>
+    </article>
+  </div>
+  {% endfor %}
+</div>
+{% if page_obj.has_other_pages %}
+<nav class="mt-5"><ul class="pagination justify-content-center">
+  {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>{% endif %}
+  {% for num in page_obj.paginator.page_range %}<li class="page-item {% if num == page_obj.number %}active{% endif %}"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>{% endfor %}
+  {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>{% endif %}
+</ul></nav>
+{% endif %}
+{% else %}
+<div class="empty-state"><i class="bi bi-tags d-block mb-2"></i><p>Sin posts con este tag.</p></div>
+{% endif %}
+{% endblock %}

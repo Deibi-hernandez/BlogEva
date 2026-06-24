@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Panel Admin — InkBlog{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+  <h1 class="section-heading mb-0"><i class="bi bi-speedometer2 me-2"></i>Panel Admin</h1>
+  <div class="d-flex gap-2">
+    <a href="{% url 'blog:user_list' %}" class="btn btn-outline-ink btn-sm"><i class="bi bi-people me-1"></i>Usuarios</a>
+    <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary btn-sm" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i>Django Admin</a>
+  </div>
+</div>
+
+<!-- Stats cards -->
+<div class="row g-3 mb-4">
+  {% for stat in stats_cards %}
+  <div class="col-6 col-md-3">
+    <div class="post-card p-3 text-center">
+      <div style="font-size:2rem;color:var(--accent)"><i class="bi bi-{{ stat.icon }}"></i></div>
+      <div class="fw-bold fs-4 mt-1">{{ stat.value }}</div>
+      <div class="meta-text">{{ stat.label }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Stats cards using context variables -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="post-card p-3 text-center">
+      <div style="font-size:2rem;color:var(--accent)"><i class="bi bi-file-text"></i></div>
+      <div class="fw-bold fs-4 mt-1">{{ total_posts }}</div>
+      <div class="meta-text">Posts totales</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="post-card p-3 text-center">
+      <div style="font-size:2rem;color:#27ae60"><i class="bi bi-check-circle"></i></div>
+      <div class="fw-bold fs-4 mt-1">{{ posts_publicados }}</div>
+      <div class="meta-text">Publicados</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="post-card p-3 text-center">
+      <div style="font-size:2rem;color:#f39c12"><i class="bi bi-pencil-square"></i></div>
+      <div class="fw-bold fs-4 mt-1">{{ posts_borrador }}</div>
+      <div class="meta-text">Borradores</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="post-card p-3 text-center">
+      <div style="font-size:2rem;color:#2980b9"><i class="bi bi-people"></i></div>
+      <div class="fw-bold fs-4 mt-1">{{ total_users }}</div>
+      <div class="meta-text">Usuarios</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Posts recientes -->
+  <div class="col-lg-8">
+    <div class="post-card">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="bi bi-file-text me-2"></i>Posts recientes</h5>
+          <a href="{% url 'blog:post_create' %}" class="btn btn-accent btn-sm"><i class="bi bi-plus me-1"></i>Nuevo</a>
+        </div>
+        {% for post in recent_posts %}
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
+          <div>
+            <a href="{{ post.get_absolute_url }}" class="text-decoration-none fw-semibold">{{ post.titulo|truncatechars:50 }}</a>
+            <div class="meta-text">{{ post.autor.username }} · {{ post.fecha_creacion|date:"d/m/Y" }}
+              {% if not post.publicado %}<span class="badge bg-warning ms-1">Borrador</span>{% endif %}
+            </div>
+          </div>
+          <div class="d-flex gap-1">
+            <a href="{% url 'blog:post_update' post.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'blog:post_delete' post.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+          </div>
+        </div>
+        {% empty %}<p class="text-muted text-center py-3">Sin posts.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Top autores + usuarios recientes -->
+  <div class="col-lg-4">
+    <div class="post-card mb-3">
+      <div class="card-body p-3">
+        <h5 class="fw-bold mb-3"><i class="bi bi-trophy me-2"></i>Top autores</h5>
+        {% for autor in top_autores %}
+        <div class="d-flex align-items-center justify-content-between py-1">
+          <a href="{% url 'blog:user_profile' autor.username %}" class="text-decoration-none fw-semibold">{{ autor.username }}</a>
+          <span class="badge-autor">{{ autor.n }} posts</span>
+        </div>
+        {% empty %}<p class="text-muted small text-center">Sin datos.</p>{% endfor %}
+      </div>
+    </div>
+    <div class="post-card">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="bi bi-person-plus me-2"></i>Nuevos usuarios</h5>
+          <a href="{% url 'blog:user_list' %}" class="btn btn-outline-ink btn-sm">Ver todos</a>
+        </div>
+        {% for u in recent_users %}
+        <div class="d-flex align-items-center justify-content-between py-1 border-bottom border-light">
+          <div>
+            <a href="{% url 'blog:user_profile' u.username %}" class="text-decoration-none fw-semibold">{{ u.username }}</a>
+            <div class="meta-text">{{ u.date_joined|date:"d/m/Y" }}</div>
+          </div>
+          {% if u.is_superuser %}<span class="badge bg-danger">Admin</span>{% endif %}
+        </div>
+        {% empty %}<p class="text-muted small text-center py-2">Sin usuarios.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

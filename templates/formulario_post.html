@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo_formulario }} — InkBlog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'blog:post_list' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Inicio</a></li>
+        <li class="breadcrumb-item active">{{ titulo_formulario }}</li>
+      </ol>
+    </nav>
+    <div class="form-card">
+      <h2 class="section-heading mb-1">{{ titulo_formulario }}</h2>
+      <p class="meta-text mb-4">{% if object %}Editando: <strong>{{ object.titulo }}</strong>{% else %}Publicando como <strong>{{ request.user.username }}</strong>{% endif %}</p>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">{{ form.titulo.label }}</label>
+          {{ form.titulo }}
+          {% if form.titulo.errors %}<div class="invalid-feedback d-block">{% for e in form.titulo.errors %}{{ e }}{% endfor %}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.resumen.label }} <span class="text-muted small">(opcional)</span></label>
+          {{ form.resumen }}
+          {% if form.resumen.errors %}<div class="invalid-feedback d-block">{% for e in form.resumen.errors %}{{ e }}{% endfor %}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.contenido.label }}</label>
+          {{ form.contenido }}
+          {% if form.contenido.errors %}<div class="invalid-feedback d-block">{% for e in form.contenido.errors %}{{ e }}{% endfor %}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.imagen.label }}</label>
+          {{ form.imagen }}
+          {% if form.imagen.errors %}<div class="invalid-feedback d-block">{% for e in form.imagen.errors %}{{ e }}{% endfor %}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.tags.label }}</label>
+          <div class="d-flex flex-wrap gap-2 p-2 border rounded">{{ form.tags }}</div>
+          {% if form.tags.errors %}<div class="invalid-feedback d-block">{% for e in form.tags.errors %}{{ e }}{% endfor %}</div>{% endif %}
+        </div>
+        <div class="mb-4 form-check">
+          {{ form.publicado }}<label class="form-check-label ms-1">{{ form.publicado.label }}</label>
+        </div>
+        {% if form.non_field_errors %}<div class="alert alert-danger">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>{% endif %}
+        <div class="d-flex gap-3">
+          <button type="submit" class="btn btn-accent px-4"><i class="bi bi-send me-1"></i>{{ accion }}</button>
+          <a href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'blog:post_list' %}{% endif %}" class="btn btn-outline-ink">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

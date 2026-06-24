@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Azure Blob Explorer — InkBlog{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+  <a href="{% url 'blog:post_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Volver al Blog
+  </a>
+  <div>
+    <h1 class="section-heading mb-0" style="font-size:1.8rem">
+      <i class="bi bi-bucket-fill me-2" style="color:#0078d4"></i>Azure Blob Explorer
+    </h1>
+    <p class="meta-text mt-1 mb-0">
+      Container: <code>{{ container_name }}</code>
+      &nbsp;|&nbsp;
+      Cuenta: <code>{{ account_name }}</code>
+      &nbsp;|&nbsp;
+      {% if use_azure %}
+        <span class="badge" style="background:#0078d4">Azure Blob Storage</span>
+      {% else %}
+        <span class="badge bg-secondary">Almacenamiento local (desarrollo)</span>
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+  <strong>Error al conectar:</strong> {{ error }}
+  <hr class="my-2">
+  <small>Verifica <code>AZURE_ACCOUNT_NAME</code>, <code>AZURE_ACCOUNT_KEY</code> y <code>AZURE_CONTAINER</code> en tu <code>.env</code></small>
+</div>
+{% endif %}
+
+{% if blobs %}
+  <!-- Resumen -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="p-3 rounded-3 text-white fw-semibold" style="background:#0078d4">
+        <div style="font-size:1.8rem">{{ blobs|length }}</div>
+        <div class="small">Objetos en Blob</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-3 rounded-3 text-white fw-semibold" style="background:#107c10">
+        <div style="font-size:1.8rem">
+          {% with imgs=blobs|length %}{{ imgs }}{% endwith %}
+        </div>
+        <div class="small">Accesibles (URL SAS)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid de imágenes -->
+  {% with images=blobs %}
+  {% if images %}
+  <h5 class="fw-bold mb-3"><i class="bi bi-images me-2"></i>Vista previa de imágenes</h5>
+  <div class="row g-3 mb-4">
+    {% for blob in blobs %}{% if blob.is_image %}
+    <div class="col-6 col-sm-4 col-md-3">
+      <div class="post-card h-100">
+        <img src="{{ blob.url }}" alt="{{ blob.name|escape }}"
+             loading="lazy" style="height:160px;object-fit:cover;width:100%">
+        <div class="p-2">
+          <p class="small fw-semibold mb-1 text-truncate" style="font-size:.78rem" title="{{ blob.name }}">
+            <i class="bi bi-file-image me-1" style="color:#0078d4"></i>{{ blob.name }}
+          </p>
+          {% if blob.size_kb != '—' %}
+          <p class="meta-text mb-1">{{ blob.size_kb }} KB</p>
+          {% endif %}
+          <a href="{{ blob.url }}" target="_blank" rel="noopener noreferrer"
+             class="btn btn-sm w-100 mt-1" style="background:#0078d4;color:#fff;font-size:.75rem">
+            <i class="bi bi-link-45deg me-1"></i>URL SAS
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}{% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- Tabla completa -->
+  <h5 class="fw-bold mb-3"><i class="bi bi-table me-2"></i>Todos los objetos</h5>
+  <div class="post-card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Nombre del Blob</th>
+            <th>Tamaño</th>
+            <th>Última modificación</th>
+            <th>Tipo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for blob in blobs %}
+          <tr>
+            <td>
+              <i class="bi bi-{% if blob.is_image %}file-image text-primary{% else %}file-earmark text-secondary{% endif %} me-2"></i>
+              <code style="font-size:.82rem">{{ blob.name }}</code>
+            </td>
+            <td class="text-muted small">{{ blob.size_kb }} KB</td>
+            <td class="text-muted small">
+              {% if blob.last_modified %}{{ blob.last_modified|date:"d/m/Y H:i" }}{% else %}—{% endif %}
+            </td>
+            <td>
+              {% if blob.is_image %}
+                <span class="badge" style="background:#0078d4">Imagen</span>
+              {% else %}
+                <span class="badge bg-secondary">Archivo</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ blob.url }}" target="_blank" rel="noopener noreferrer"
+                 class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Abrir
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% else %}
+  <div class="empty-state">
+    <i class="bi bi-bucket d-block mb-3" style="color:#0078d4;font-size:4rem;opacity:.4"></i>
+    <p class="fs-5 fw-semibold">Container vacío</p>
+    <p class="small text-muted">Crea un post con imagen para que aparezca aquí.</p>
+    {% if user.is_authenticated %}
+    <a href="{% url 'blog:post_create' %}" class="btn btn-accent mt-2">
+      <i class="bi bi-plus-lg me-1"></i>Crear post con imagen
+    </a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

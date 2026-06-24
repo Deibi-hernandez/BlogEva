@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Inicio — InkBlog{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Sidebar filtros -->
+  <div class="col-12 col-lg-3 order-lg-2">
+    <div class="filter-panel">
+      <h6><i class="bi bi-funnel-fill me-1"></i>Filtrar</h6>
+      <form method="get" action="{% url 'blog:post_list' %}">
+        <div class="mb-2">{{ filter_form.q }}</div>
+        <div class="mb-2">{{ filter_form.autor }}</div>
+        <div class="mb-2">{{ filter_form.tag }}</div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1">Desde</label>{{ filter_form.fecha_desde }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold mb-1">Hasta</label>{{ filter_form.fecha_hasta }}
+        </div>
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-accent btn-sm"><i class="bi bi-search me-1"></i>Aplicar</button>
+          <a href="{% url 'blog:post_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i>Limpiar</a>
+        </div>
+        {% if filter_form.errors %}
+          <div class="alert alert-warning mt-2 py-1 small">{{ filter_form.errors }}</div>
+        {% endif %}
+      </form>
+
+      {% if tags_populares %}
+      <hr class="my-3">
+      <h6><i class="bi bi-tags me-1"></i>Tags</h6>
+      <div class="d-flex flex-wrap gap-1">
+        {% for tag in tags_populares %}
+          <a href="{% url 'blog:posts_by_tag' tag.slug %}" class="badge-tag">{{ tag.nombre }} <span class="text-muted">({{ tag.n }})</span></a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Posts -->
+  <div class="col-12 col-lg-9 order-lg-1">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+      <h1 class="section-heading mb-0">Últimos posts</h1>
+      {% if user.is_authenticated %}
+        <a href="{% url 'blog:post_create' %}" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i>Nuevo post</a>
+      {% endif %}
+    </div>
+
+    {% if request.GET.q or request.GET.autor or request.GET.tag or request.GET.fecha_desde or request.GET.fecha_hasta %}
+      <div class="alert alert-warning d-flex align-items-center gap-2 py-2 mb-4">
+        <i class="bi bi-funnel"></i>
+        <span>Filtros activos — <a href="{% url 'blog:post_list' %}" class="alert-link">ver todos</a></span>
+      </div>
+    {% endif %}
+
+    {% if posts %}
+      <div class="row g-4">
+        {% for post in posts %}
+        <div class="col-12 col-md-6">
+          <article class="post-card h-100 d-flex flex-column">
+            {% if post.imagen %}
+              <img src="{{ post.imagen.url }}" alt="{{ post.titulo|escape }}" class="post-img">
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="{% url 'blog:user_profile' post.autor.username %}" class="badge-autor text-decoration-none">
+                  <i class="bi bi-person-fill me-1"></i>{{ post.autor.username }}
+                </a>
+                <span class="meta-text ms-auto"><i class="bi bi-calendar3 me-1"></i>{{ post.fecha_creacion|date:"d M, Y" }}</span>
+              </div>
+              <h2 class="post-title mb-2"><a href="{{ post.get_absolute_url }}">{{ post.titulo }}</a></h2>
+              <p class="text-muted small mb-2 flex-grow-1">{{ post.get_resumen|truncatewords:20 }}</p>
+              {% if post.tags.all %}
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                  {% for tag in post.tags.all %}<a href="{% url 'blog:posts_by_tag' tag.slug %}" class="badge-tag">{{ tag.nombre }}</a>{% endfor %}
+                </div>
+              {% endif %}
+              <div class="d-flex align-items-center justify-content-between mt-auto pt-3 border-top border-light">
+                <a href="{{ post.get_absolute_url }}" class="btn btn-sm btn-outline-ink">Leer <i class="bi bi-arrow-right ms-1"></i></a>
+                {% if user == post.autor or user.is_superuser %}
+                <div class="d-flex gap-1">
+                  <a href="{% url 'blog:post_update' post.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar"><i class="bi bi-pencil"></i></a>
+                  <a href="{% url 'blog:post_delete' post.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></a>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </article>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if is_paginated %}
+      <nav class="mt-5"><ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}"><i class="bi bi-chevron-left"></i></a></li>{% endif %}
+        {% for num in page_obj.paginator.page_range %}<li class="page-item {% if num == page_obj.number %}active{% endif %}"><a class="page-link" href="?page={{ num }}&{{ request.GET.urlencode }}">{{ num }}</a></li>{% endfor %}
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}"><i class="bi bi-chevron-right"></i></a></li>{% endif %}
+      </ul></nav>
+      {% endif %}
+    {% else %}
+      <div class="empty-state">
+        <i class="bi bi-journal-x d-block mb-3"></i>
+        <p class="fs-5 fw-semibold">No hay posts disponibles</p>
+        <p class="small">{% if request.GET %}Sin resultados con los filtros aplicados.{% else %}Sé el primero en publicar.{% endif %}</p>
+        {% if user.is_authenticated %}<a href="{% url 'blog:post_create' %}" class="btn btn-accent mt-2"><i class="bi bi-plus-lg me-1"></i>Crear el primer post</a>{% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

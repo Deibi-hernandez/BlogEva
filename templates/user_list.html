@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Usuarios - InkBlog{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-people text-primary me-2"></i>
+                        Gestión de Usuarios
+                    </h1>
+                    <small class="text-muted">Administra las cuentas de usuario del blog</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'blog:admin_panel' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Volver al Panel
+                    </a>
+                    <a href="{% url 'blog:registro' %}" class="btn btn-success">
+                        <i class="bi bi-person-plus me-1"></i>Crear Usuario
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Estado</th>
+                            <th>Posts</th>
+                            <th>Fecha Registro</th>
+                            <th>Último Login</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in page_obj %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-primary text-white me-3" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                        {{ user.username|first|upper }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ user.username }}</strong>
+                                        {% if user.is_superuser %}
+                                        <span class="badge bg-danger ms-1">Admin</span>
+                                        {% elif user.is_staff %}
+                                        <span class="badge bg-warning ms-1">Staff</span>
+                                        {% endif %}
+                                        {% if user == request.user %}
+                                        <span class="badge bg-info ms-1">Tú</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.email|default:"—" }}</td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ user.posts.count }}</span>
+                            </td>
+                            <td>{{ user.date_joined|date:"d/m/Y H:i" }}</td>
+                            <td>{{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    {% if user != request.user %}
+                                    <form method="post" action="{% url 'blog:user_toggle' user.id %}" class="d-inline" onsubmit="return confirm('¿Estás seguro de {{ user.is_active|yesno:'desactivar,activar' }} este usuario?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm {{ user.is_active|yesno:'btn-warning,btn-success' }}">
+                                            <i class="bi {{ user.is_active|yesno:'bi-person-dash,bi-person-check' }}"></i>
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'blog:user_delete' user.id %}" 
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('¿Estás seguro de eliminar este usuario y todos sus posts? Esta acción no se puede deshacer.')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted small">—</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-people fs-1 mb-2"></i>
+                                <br>No hay usuarios registrados
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Paginación -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Paginación de usuarios">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ page_obj.paginator.count }}</h5>
+                    <p class="card-text">Total Usuarios</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">{{ page_obj|length }}</h5>
+                    <p class="card-text">En esta página</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">{{ page_obj.object_list|length }}</h5>
+                    <p class="card-text">Activos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">{{ page_obj.object_list|length }}</h5>
+                    <p class="card-text">Admins</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
