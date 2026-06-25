@@ -1,0 +1,11 @@
+------------------------------------------------------------------------
+ REQUERIMIENTOS DE SOFTWARE (DEPENDENCIAS DE PYTHON / requirements.txt)
+------------------------------------------------------------------------
+Es necesario instalar las siguientes librerías de Python dentro de un 
+entorno virtual (venv) en la instancia AWS EC2:
+
+* Django>=5.2             -> Framework principal de desarrollo web.
+* python-dotenv           -> Carga de variables de entorno desde el archivo '.env'.
+* mysqlclient             -> Conector nativo para la comunicación de Django con MySQL.
+* django-storages         -> Motor de abstracción para conectar el almacenamiento con nubes.
+* azure-storage-blob      -> SDK oficial de Azure para interactuar con Blob Storage y el explorador.
