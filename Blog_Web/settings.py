@@ -9,6 +9,7 @@ Django settings — Blog_Web (MultiCloud: OCI MySQL + Azure Blob)
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import urllib.request
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
@@ -21,6 +22,13 @@ MEDIA_ROOT    = BASE_DIR / 'media'   # fallback local si no hay Azure
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 DEBUG      = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')]
+try:
+    url = 'https://checkip.amazonaws.com'
+    public_ip = urllib.request.urlopen(url, timeout=3).read().decode('utf-8').strip()
+    if public_ip and public_ip not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(public_ip)
+except Exception:
+    pass
 
 # ── Apps ──────────────────────────────────────────────────────
 INSTALLED_APPS = [
