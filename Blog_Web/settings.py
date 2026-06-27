@@ -187,9 +187,9 @@ _azure_origin = (
 )
 CSP_POLICY = (
     "default-src 'self'; "
-    "script-src 'self' https://cdn.jsdelivr.net; "
-    "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
-    "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+    "font-src 'self' data: https: http: https://fonts.gstatic.com https://cdn.jsdelivr.net; "
     f"img-src 'self' data: {_azure_origin}; "
     "frame-ancestors 'none';"
 )
